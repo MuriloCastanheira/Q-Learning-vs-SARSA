@@ -3,9 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 import pygame
+import os
 
 def run(is_training=True, render=False):
-
+    print("Inicializando o ambiente...")
     env = gym.make('CartPole-v1')
 
     # Inicializa o Pygame para renderização
@@ -30,8 +31,10 @@ def run(is_training=True, render=False):
     ang_vel_space = np.linspace(-4, 4, 10)
 
     if is_training:
+        print("Inicializando tabela Q...")
         q = np.zeros((len(pos_space) + 1, len(vel_space) + 1, len(ang_space) + 1, len(ang_vel_space) + 1, env.action_space.n))  # Inicializa um array 11x11x11x11x2
     else:
+        print("Carregando tabela Q...")
         with open('sarsa.pkl', 'rb') as f:
             q = pickle.load(f)
 
@@ -46,6 +49,7 @@ def run(is_training=True, render=False):
 
     i = 0
 
+    print("Iniciando o loop de episódios...")
     while True:
         state = env.reset()[0]  # Posição inicial, velocidade inicial sempre 0
         state_p = np.digitize(state[0], pos_space)
@@ -103,6 +107,7 @@ def run(is_training=True, render=False):
             print(f'Episode: {i} {rewards}  Epsilon: {epsilon:0.2f}  Mean Rewards {mean_rewards:0.1f}')
 
         if mean_rewards > 1000:
+            print("Condição de parada atingida.")
             break
 
         epsilon = max(epsilon - epsilon_decay_rate, 0)
@@ -110,15 +115,35 @@ def run(is_training=True, render=False):
         i += 1
 
     env.close()
+    print("Fechando o ambiente...")
 
     # Salva a tabela Q em um arquivo
     if is_training:
+        print("Salvando tabela Q...")
         with open('sarsa.pkl', 'wb') as f:
             pickle.dump(q, f)
 
+    # Cria o diretório se não existir
+    if not os.path.exists('grafico'):
+        os.makedirs('grafico')
+
+    # Cria o gráfico
+    print("Gerando o gráfico...")
     mean_rewards = [np.mean(rewards_per_episode[max(0, t - 100):(t + 1)]) for t in range(i)]
-    plt.plot(mean_rewards)
-    plt.savefig('cartpole.png')
+    plt.figure(figsize=(10, 5))
+    plt.plot(mean_rewards, label='Média de Recompensas por Episódio')
+    plt.xlabel('Episódio')
+    plt.ylabel('Recompensa Média')
+    plt.title('Gráfico de Episódio vs Recompensa')
+    plt.legend()
+    plt.grid(True)
+
+    # Tenta salvar o gráfico e captura erros
+    try:
+        plt.savefig('grafico.png')
+        print('Gráfico salvo como grafico/cartpole.png')
+    except Exception as e:
+        print(f'Erro ao salvar o gráfico: {e}')
 
     if render:
         pygame.quit()
@@ -152,4 +177,4 @@ def render_custom(screen, background_image, car_image, pole_image, state):
     pygame.display.flip()
 
 if __name__ == '__main__':
-    run(is_training=False, render=True)
+    run(is_training=True, render=False)

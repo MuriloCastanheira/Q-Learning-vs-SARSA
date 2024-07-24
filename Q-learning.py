@@ -124,7 +124,7 @@ def run(is_training=True, render=False):
 
     # Tenta salvar o gráfico e captura erros
     try:
-        plt.savefig('grafico/cartpole.png')
+        plt.savefig('grafico.png')
         print('Gráfico salvo como grafico/cartpole.png')
     except Exception as e:
         print(f'Erro ao salvar o gráfico: {e}')
@@ -156,4 +156,4 @@ def render_custom(screen, background_image, car_image, pole_image, state):
     pygame.display.flip()
 
 if __name__ == '__main__':
-    run(is_training=False, render=True)
+    run(is_training=True, render=False)
